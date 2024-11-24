@@ -1,0 +1,117 @@
+---
+title: "homework5"
+output: pdf_document
+date: "2024-07-29"
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+# Problem 1
+```{r}
+library(datasets)
+airquality$Temperature <- ifelse(airquality$Temp > median(airquality$Temp, na.rm = TRUE), "Hotter", "Colder")
+ggplot(airquality, aes(x = Wind, y = Ozone, color = Temperature)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "blue", fill = "gray", alpha = 0.3) +
+  scale_color_manual(values = c("Hotter" = "red", "Colder" = "skyblue")) +
+  labs(title = "Ozone and Wind in NYC, 1973",
+       x = "Wind (mph)",
+       y = "Ozone (ppb)",
+       color = "")
+```
+
+# Problem 2
+```{r}
+is_derangement <- function(permutation) {
+  all(permutation != 1:length(permutation))
+}
+set.seed(123)
+n <- 100
+num_replications <- 2000
+results <- numeric(num_replications)
+
+for (i in 1:num_replications) {
+  permutation <- sample(1:n, n)
+  results[i] <- is_derangement(permutation)
+}
+cumulative_prob <- cumsum(results) / (1:num_replications)
+
+df <- data.frame(
+  Replications = 1:num_replications,
+  Probability = cumulative_prob
+)
+
+ggplot(df, aes(x = Replications, y = Probability)) +
+  geom_line() +
+  geom_hline(yintercept = 1/exp(1), color = "red") +
+  labs(title = "Probability of a Derangement",
+       x = "Number of replications",
+       y = "p") 
+```
+
+# Problem 3
+```{r}
+library(tidyverse)
+data("who")
+who_tidy <- who %>%
+  gather(key = "key", value = "cases", -country, -iso2, -iso3, -year) %>%
+  separate(key, into = c("new", "type", "sexage"), sep = "_", extra = "merge", fill = "right") %>%
+  separate(sexage, into = c("sex", "age"), sep = 1, fill = "right") %>%
+  select(country, year, type, sex, age, cases) %>%
+  filter(!is.na(cases))
+
+
+who_tidy <- who_tidy %>%
+  filter(sex %in% c("f", "m"))
+
+tb_totals <- who_tidy %>%
+  group_by(country, year, sex) %>%
+  summarize(total_cases = sum(cases, na.rm = TRUE))
+
+head(tb_totals)
+
+p <- ggplot(tb_totals, aes(x = year, y = total_cases, color = sex)) +
+  geom_jitter(width = 0.3, alpha = 0.5) +
+  scale_color_manual(values = c("f" = "black", "m" = "black")) +
+  facet_wrap(~ sex, labeller = labeller(sex = c("f" = "Women", "m" = "Men"))) +
+  labs(title = "Tuberculosis Cases in Countries by Year",
+       subtitle = "Dramatic increase in case count since mid 90s",
+       x = "",
+       y = "Total Cases",
+       color = "") +
+  scale_y_continuous(labels = scales::label_comma()) +
+  scale_x_continuous(breaks = seq(1980, 2015, by = 5)) +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        strip.text = element_text(face = "bold"),
+        legend.position = "none")
+
+india_2007_f <- tb_totals %>% filter(country == "India" & year == 2007 & sex == "f") %>% summarize(max_cases = max(total_cases))
+india_2007_m <- tb_totals %>% filter(country == "India" & year == 2007 & sex == "m") %>% summarize(max_cases = max(total_cases))
+
+p <- p + annotate("text", x = 2007, y = india_2007_f$max_cases, 
+                  label = "India 2007", color = "red", vjust = -1, hjust = 1.1, size = 4) 
+  annotate("text", x = 2007, y = india_2007_m$max_cases, 
+           label = "India 2007", color = "red", vjust = -1, hjust = 1.1, size = 4)
+  
+print(p)
+```
+
+# Problem 4
+1. Because they are so mu ch different number and it is not ordered. also the symbols are mess.
+
+```{r}
+relig_income_tidy <- relig_income %>%
+  pivot_longer(cols = -religion, names_to = "income_range", values_to = "count")
+head(relig_income_tidy,4)
+relig_income[1:3, "$10-20k"]
+ggplot(relig_income_tidy, mapping=aes(x = count, y = reorder(religion, count, FUN = sum), fill = religion)) +
+  geom_col(show.legend = FALSE) +
+  labs(title = "Participants in Pew Research Survey",
+       x = NULL,
+       y = NULL,)
+```
+

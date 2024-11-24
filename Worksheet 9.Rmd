@@ -1,0 +1,51 @@
+---
+title: "worksheet 9"
+output: pdf_document
+date: "2024-07-24"
+---
+```{r}
+library(tidyverse)
+library(ggplot2)
+hibbs <- as_tibble(read.csv("/Users/ella/Downloads/hibbs.dat",sep=""))
+```
+
+# Problem 1
+```{r}
+library(ggplot2)
+ggplot(hibbs, aes(x = growth, y = vote)) +
+  geom_point() +
+  geom_text(aes(label = year), hjust = -0.1, vjust = -0.1) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Forecasting the election from the economy",
+       x = "Avg recent growth in personal income",
+       y = "Incumbent party's vote share") +
+  scale_x_continuous(labels = scales::percent_format(scale = 1), limits = c(0, 4), breaks = seq(0, 4, by = 1)) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1), limits = c(45, 60), breaks = seq(45, 60, by = 5)) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(size = 12, face = "bold"),
+    axis.title.y = element_text(size = 12, face = "bold")
+  )
+```
+
+# Problem 2
+```{r}
+?mpg
+p <- ggplot(mpg, mapping = aes(x = factor(cyl), y = hwy))
+p + geom_boxplot()
+```
+
+# Problem 3
+```{r}
+library(babynames)
+robin <- filter(babynames, name == "Robin")
+head(robin, 4)
+ggplot(robin, aes(x = year, y = n, color = sex)) +
+  geom_line() +
+  labs(title = "Number of babies named Robin",
+       x = "Year",
+       y = "Number",
+       caption = "Source: SSA") +
+  theme_minimal() +
+  scale_color_manual(values = c("F" = "red", "M" = "cyan"))
+```
